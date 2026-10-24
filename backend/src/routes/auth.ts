@@ -113,4 +113,15 @@ router.get('/me', (req: Request, res: Response) => {
   }
 });
 
+// GET /auth/test-db — verify DB connectivity (remove after debugging)
+router.get('/test-db', async (_req: Request, res: Response) => {
+  try {
+    const count = await prisma.user.count();
+    res.json({ ok: true, userCount: count });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: (err as Error).message });
+  }
+});
+
 export default router;
+
