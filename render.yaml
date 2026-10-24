@@ -92,3 +92,4 @@ services:
     name: outbox-redis
     plan: free
     maxmemoryPolicy: noeviction
+    ipAllowList: []   # Empty = only internal Render services can connect
