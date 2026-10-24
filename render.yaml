@@ -1,0 +1,94 @@
+services:
+  # ── Express API ──────────────────────────────────
+  - type: web
+    name: outbox-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: outbox-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: outbox-redis
+          property: port
+      - key: ELASTICSEARCH_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ETHEREAL_ACCOUNTS
+        sync: false
+      - key: WORKER_CONCURRENCY
+        value: "2"
+      - key: MIN_SEND_DELAY_MS
+        value: "2000"
+      - key: MAX_EMAILS_PER_HOUR_PER_SENDER
+        value: "50"
+      - key: SLACK_CLIENT_ID
+        sync: false
+      - key: SLACK_CLIENT_SECRET
+        sync: false
+      - key: SLACK_REDIRECT_URI
+        sync: false
+      - key: PORT
+        value: "4000"
+      - key: FRONTEND_URL
+        sync: false
+
+  # ── BullMQ Worker ────────────────────────────────
+  - type: worker
+    name: outbox-worker
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: node dist/worker.js
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: outbox-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: outbox-redis
+          property: port
+      - key: ELASTICSEARCH_URL
+        sync: false
+      - key: ETHEREAL_ACCOUNTS
+        sync: false
+      - key: WORKER_CONCURRENCY
+        value: "2"
+      - key: MIN_SEND_DELAY_MS
+        value: "2000"
+      - key: MAX_EMAILS_PER_HOUR_PER_SENDER
+        value: "50"
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+  # ── Redis (AOF persistence) ──────────────────────
+  - type: redis
+    name: outbox-redis
+    plan: free
+    maxmemoryPolicy: noeviction

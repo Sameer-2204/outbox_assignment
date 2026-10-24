@@ -14,8 +14,18 @@ import slackRoutes from './routes/slack';
 const app = express();
 
 // Middleware
+const allowedOrigins = [
+  config.frontendUrl,
+  /\.vercel\.app$/,   // Allow all Vercel preview deployments
+];
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // Allow server-to-server
+    const allowed = allowedOrigins.some((o) =>
+      typeof o === 'string' ? o === origin : o.test(origin)
+    );
+    callback(allowed ? null : new Error('CORS not allowed'), allowed);
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
